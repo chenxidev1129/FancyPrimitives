@@ -1,0 +1,93 @@
+﻿<!--
+MIT License
+
+Copyright(c) 2019 Dennis Geller
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE. -->
+
+<UserControl x:Class="FancyPrimitives.StandardColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:local="clr-namespace:FancyPrimitives"
+             mc:Ignorable="d" 
+             x:Name="thisUserControl"
+             d:DesignHeight="200" d:DesignWidth="200">
+
+    <UserControl.Resources>
+        <local:SymColorBrushStringConverter x:Key="symColorBrushStringConverter"/>
+        <local:ColorToLinearGradientBrushConverter x:Key="colorToLinearGradientBrushConverter"/>
+        <local:FadeDownColorConverter x:Key="FadeDownColorConverter"/>
+
+        <DataTemplate x:Key="normalItemTemplate">
+            <Rectangle Width="15" Height="15" Margin="0" Stroke="Black" StrokeThickness="1" 
+                       Fill="{Binding Path=., Converter={StaticResource symColorBrushStringConverter}}"/>
+        </DataTemplate>
+
+        <DataTemplate x:Key="selectionBoxTemplate">
+            <Rectangle Name="selectionRectangle" 
+                       Width="60" Height="60" Margin="0" Stroke="Black" StrokeThickness="0" 
+                       Fill="{Binding ElementName=comboBoxStandardColor, Path=SelectedValue, Converter={StaticResource symColorBrushStringConverter}}">
+            </Rectangle>
+
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding ElementName=thisUserControl, Path=IsEnabled}" Value="False">
+                    <DataTrigger.Setters>
+                        <Setter TargetName="selectionRectangle" Property="Fill" 
+                                Value="{Binding ElementName=selectionRectangle, Path=Fill, Converter={StaticResource FadeDownColorConverter}, ConverterParameter=35, Mode=OneTime}"/>
+                    </DataTrigger.Setters>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate x:Key="combinedTemplate">
+            <ContentPresenter x:Name="Presenter" Content="{Binding}" ContentTemplate="{StaticResource normalItemTemplate}" />
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource FindAncestor,ComboBoxItem,1}}" Value="{x:Null}">
+                    <Setter TargetName="Presenter" Property="ContentTemplate" Value="{StaticResource selectionBoxTemplate}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Horizontal">
+
+        <ComboBox x:Name="comboBoxStandardColor" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="50" Height="20" Padding="2"
+                  SelectedValuePath="."
+                  ItemsSource="{Binding ElementName=thisUserControl, Path=StandardColors}"
+                  ItemTemplate="{StaticResource combinedTemplate}"
+                  SelectionChanged="OnStandardColorSelectionChanged">
+
+            <ComboBox.ItemContainerStyle>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="Padding" Value="1"/>
+                </Style>
+            </ComboBox.ItemContainerStyle>
+
+            <ComboBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Width="248" Background="LightGray" HorizontalAlignment="Left"/>
+                </ItemsPanelTemplate>
+            </ComboBox.ItemsPanel>
+        </ComboBox>
+
+    </StackPanel>
+</UserControl>

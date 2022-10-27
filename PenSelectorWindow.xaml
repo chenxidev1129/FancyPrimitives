@@ -1,0 +1,164 @@
+﻿<!--
+MIT License
+
+Copyright(c) 2019 Dennis Geller
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE. -->
+
+<Window x:Class="FancyPrimitives.PenSelectorWindow"
+        x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FancyPrimitives"
+        mc:Ignorable="d"
+        Title="PenSelectorWindow" Height="251" Width="430"
+        WindowStyle="None"
+        AllowsTransparency="True" 
+        Background="Transparent"
+        WindowStartupLocation="CenterOwner"
+        x:Name="thisWindow">
+
+    <Window.Resources>
+        <local:SymColorBrushStringConverter x:Key="symColorBrushStringConverter"/>
+        <local:ColorToLinearGradientBrushConverter x:Key="colorToLinearGradientBrushConverter"/>
+        <local:ColorAndAlphaToColorConverter x:Key="colorAndAlphaToColorConverter"/>
+        
+        <DrawingBrush x:Key="transparentBackgroundBrush"
+                      Viewport="0,0,10,10" ViewportUnits="Absolute" TileMode="Tile">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="WhiteSmoke">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,100,100" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                    <GeometryDrawing Brush="LightGray">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="0,0,50,50" />
+                                <RectangleGeometry Rect="50,50,50,50" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+    </Window.Resources>
+
+    <Border CornerRadius="5" Background="WhiteSmoke" BorderBrush="Gray" BorderThickness="2">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="SteelBlue" MouseLeftButtonDown="WindowTitleBar_MouseLeftButtonDown">
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="WhiteSmoke">Edit Line Appearance</TextBlock>
+            </Grid>
+
+            <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch">
+                <Rectangle x:Name="rectSelectedColor" HorizontalAlignment="Stretch"
+                       Height="20" Margin="10 6 10 0" Stroke="Black" StrokeThickness="1" ToolTip="Selected color with transparency">
+                    <Rectangle.Fill>
+                        <MultiBinding Converter="{StaticResource colorAndAlphaToColorConverter}" Mode="OneWay">
+                            <Binding ElementName="listBoxStdColors" Path="SelectedValue"/>
+                            <Binding ElementName="sliderAlphaChannel" Path="Value"/>
+                        </MultiBinding>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10 10 0 0">
+                    <TextBlock Margin="0 0 5 0">Transparency:</TextBlock>
+                    <Grid Background="{StaticResource transparentBackgroundBrush}" Height="20" Width="60">
+                        <Slider x:Name="sliderAlphaChannel"
+                            Background="{Binding ElementName=listBoxStdColors, Path=SelectedValue, Converter={StaticResource colorToLinearGradientBrushConverter}}" 
+                            Orientation="Horizontal" Minimum="0" Maximum="255" Width="60" Height="20" VerticalAlignment="Center" 
+                            ValueChanged="sliderAlphaChannel_ValueChanged"/>
+                    </Grid>
+                </StackPanel>
+
+                <TextBlock FontStyle="Italic" Margin="0 25 0 3" HorizontalAlignment="Center">Line Sample:</TextBlock>
+                <Border CornerRadius="5" Height="30" Width="80" BorderThickness="1" BorderBrush="Black" HorizontalAlignment="Center">
+                    <Line X1="10" Y1="15" X2="70" Y2="15" RenderOptions.EdgeMode="Aliased"
+                        StrokeThickness="{Binding ElementName=txtBoxThickness, Path=Text}">
+                        <Line.Stroke>
+                            <MultiBinding Converter="{StaticResource colorAndAlphaToColorConverter}" Mode="OneWay">
+                                <Binding ElementName="listBoxStdColors" Path="SelectedValue"/>
+                                <Binding ElementName="sliderAlphaChannel" Path="Value"/>
+                            </MultiBinding>
+                        </Line.Stroke>
+                    </Line>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10 30 0 0">
+                    <TextBlock Margin="0 0 5 0">Thickness:</TextBlock>
+                    <local:IntegerTextBox x:Name="txtBoxThickness" 
+                                      MinValue="0" MaxValue="20"
+                                      Width="30" VerticalAlignment="Center" 
+                                      TextChanged="txtBoxThickness_TextChanged"/>
+                    <local:UpDownButtonBlock Height="{Binding ElementName=txtBoxThickness, Path=ActualHeight}" Width="20"
+                                         UpButtonPressedCommand="{Binding ElementName=txtBoxThickness, Path=IncrementValueCommand}"
+                                         DownButtonPressedCommand="{Binding ElementName=txtBoxThickness, Path=DecrementValueCommand}"/>
+                </StackPanel>
+
+            </StackPanel>
+
+            <ListBox x:Name="listBoxStdColors" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                    Margin="0 3 0 0" Padding="2"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" 
+                    SelectedValuePath="."
+                    ItemsSource="{Binding ElementName=thisWindow, Path=StandardColors}"
+                    SelectionChanged="listBoxStdColors_SelectionChanged" BorderThickness="0">
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Rectangle Width="15" Height="15" Margin="0" Stroke="Black" StrokeThickness="1" 
+                                Fill="{Binding Path=., Converter={StaticResource symColorBrushStringConverter}}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="1"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Width="247" Height="209" Background="LightGray" HorizontalAlignment="Left"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+            </ListBox>
+
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0 5 0 5" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                <Button x:Name="buttonOk" Width="60" Height="25" Margin="0 0 10 0" Click="OkButton_Click">Ok</Button>
+                <Button x:Name="buttonCancel" Width="60" Height="25" IsCancel="True" Click="CancelButton_Click">Cancel</Button>
+            </StackPanel>
+
+        </Grid>
+    </Border>
+</Window>
